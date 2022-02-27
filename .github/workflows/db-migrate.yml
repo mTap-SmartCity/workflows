@@ -24,8 +24,6 @@ on:
         required: true
       pg_database:
         required: true
-      kube_config:
-        required: true
 
 env:
   VERSION:     ${{ inputs.version }}
@@ -63,5 +61,7 @@ jobs:
             -e PG_DATABASE=${PG_DATABASE} \
             -e PG_PORT=${PG_PORT} \
             -e PG_SSL=true \
+            -e GITLAB_TOKEN='' \
+            -e MTAP_TOKEN='' \
             ${ACR_NAME}.azurecr.io/${GITHUB_REPOSITORY##*/}:${VERSION} \
             npm run migrate:prod
