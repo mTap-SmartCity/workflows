@@ -3,14 +3,6 @@ name: DB migrate
 on:
   workflow_call:
     inputs:
-      platform:
-        description: 'Name of the platform'
-        required: true
-        type: string
-      environment:
-        description: 'Name of the environment'
-        required: true
-        type: string
       version:
         description: 'Version of application'
         required: true
@@ -36,8 +28,6 @@ on:
         required: true
 
 env:
-  PLATFORM:    ${{ inputs.platform }}
-  ENVIRONMENT: ${{ inputs.environment }}
   VERSION:     ${{ inputs.version }}
 
   ACR_NAME:         ${{ secrets.acr_name }}
@@ -73,7 +63,5 @@ jobs:
             -e PG_DATABASE=${PG_DATABASE} \
             -e PG_PORT=${PG_PORT} \
             -e PG_SSL=true \
-            -e GITLAB_TOKEN=${{ secrets.GITLAB_TOKEN }} \
-            -e MTAP_TOKEN=${{ secrets.MTAP_TOKEN }} \
             ${ACR_NAME}.azurecr.io/${GITHUB_REPOSITORY##*/}:${VERSION} \
             npm run migrate:prod

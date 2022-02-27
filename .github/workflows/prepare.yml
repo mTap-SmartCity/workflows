@@ -1,0 +1,60 @@
+name: Prepare
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: 'Name of the platform'
+        required: true
+        type: string
+      environment:
+        description: 'Name of the environment'
+        required: true
+        type: string
+    outputs:
+      platform:
+        value: ${{ jobs.prepare.outputs.platform }}
+      environment:
+        value: ${{ jobs.prepare.outputs.environment }}
+      secret_pg_user:
+        value: ${{ jobs.prepare.outputs.secret_pg_user }}
+      secret_pg_password:
+        value: ${{ jobs.prepare.outputs.secret_pg_password }}
+      secret_pg_host:
+        value: ${{ jobs.prepare.outputs.secret_pg_host }}
+      secret_pg_port:
+        value: ${{ jobs.prepare.outputs.secret_pg_port }}
+      secret_pg_database:
+        value: ${{ jobs.prepare.outputs.secret_pg_database }}
+      secret_kube_config:
+        value: ${{ jobs.prepare.outputs.secret_kube_config }}
+
+env:
+  PLATFORM:    ${{ inputs.platform }}
+  ENVIRONMENT: ${{ inputs.environment }}
+
+jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare Outputs
+        id: define-secrets
+        run: |
+          echo "::set-output name=platform::${PLATFORM,,}";
+          echo "::set-output name=environment::${ENVIRONMENT,,}";
+          echo "::set-output name=secret_pg_user::${PLATFORM^^}_PG_USER";
+          echo "::set-output name=secret_pg_password::${PLATFORM^^}_PG_PASSWORD";
+          echo "::set-output name=secret_pg_host::${PLATFORM^^}_PG_HOST";
+          echo "::set-output name=secret_pg_port::${PLATFORM^^}_PG_PORT";
+          echo "::set-output name=secret_pg_database::${PLATFORM^^}_${ENVIRONMENT^^}_PG_DATABASE";
+          echo "::set-output name=secret_kube_config::${PLATFORM^^}_KUBE_CONFIG";
+    outputs:
+      platform:           ${{ steps.define-secrets.outputs.platform }}
+      environment:        ${{ steps.define-secrets.outputs.environment }}
+      secret_pg_user:     ${{ steps.define-secrets.outputs.secret_pg_user }}
+      secret_pg_password: ${{ steps.define-secrets.outputs.secret_pg_password }}
+      secret_pg_host:     ${{ steps.define-secrets.outputs.secret_pg_host }}
+      secret_pg_port:     ${{ steps.define-secrets.outputs.secret_pg_port }}
+      secret_pg_database: ${{ steps.define-secrets.outputs.secret_pg_database }}
+      secret_kube_config: ${{ steps.define-secrets.outputs.secret_kube_config }}
