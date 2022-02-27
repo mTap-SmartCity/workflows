@@ -1,0 +1,79 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: 'Name of the platform'
+        required: true
+        type: string
+      environment:
+        description: 'Name of the environment'
+        required: true
+        type: string
+      version:
+        description: 'Version of application'
+        required: true
+        type: string
+    secrets:
+      acr_name:
+        required: true
+      acr_write_id:
+        required: true
+      acr_write_secret:
+        required: true
+      pg_user:
+        required: true
+      pg_password:
+        required: true
+      pg_host:
+        required: true
+      pg_port:
+        required: true
+      pg_database:
+        required: true
+      kube_config:
+        required: true
+
+env:
+  PLATFORM:    ${{ inputs.platform }}
+  ENVIRONMENT: ${{ inputs.environment }}
+  VERSION:     ${{ inputs.version }}
+
+  ACR_NAME:         ${{ secrets.acr_name }}
+  ACR_WRITE_ID:     ${{ secrets.acr_write_id }}
+  ACR_WRITE_SECRET: ${{ secrets.acr_write_secret }}
+
+  PG_USER:     ${{ secrets.pg_user }}
+  PG_PASSWORD: ${{ secrets.pg_password }}
+  PG_HOST:     ${{ secrets.pg_host }}
+  PG_PORT:     ${{ secrets.pg_port }}
+  PG_DATABASE: ${{ secrets.pg_database }}
+
+jobs:
+  db_migrate:
+    name: DB migrate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Login to Container Registry
+        run: echo "${ACR_WRITE_SECRET}" | docker login ${ACR_NAME}.azurecr.io --username ${ACR_WRITE_ID} --password-stdin
+
+      - name: Pull application image
+        run: docker pull ${ACR_NAME}.azurecr.io/${GITHUB_REPOSITORY##*/}:${VERSION}
+
+      - name: Run migration
+        run: |
+          docker run --rm \
+            -e PG_USER=${PG_USER} \
+            -e PG_PASSWORD=${PG_PASSWORD} \
+            -e PG_HOST=${PG_HOST} \
+            -e PG_DATABASE=${PG_DATABASE} \
+            -e PG_PORT=${PG_PORT} \
+            -e PG_SSL=true \
+            -e GITLAB_TOKEN=${{ secrets.GITLAB_TOKEN }} \
+            -e MTAP_TOKEN=${{ secrets.MTAP_TOKEN }} \
+            ${ACR_NAME}.azurecr.io/${GITHUB_REPOSITORY##*/}:${VERSION} \
+            npm run migrate:prod

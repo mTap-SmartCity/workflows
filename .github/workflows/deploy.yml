@@ -1,0 +1,75 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: 'Name of the platform'
+        required: true
+        type: string
+      environment:
+        description: 'Name of the environment'
+        required: true
+        type: string
+      version:
+        description: 'Version of application'
+        required: true
+        type: string
+    secrets:
+      acr_name:
+        required: true
+      acr_write_id:
+        required: true
+      acr_write_secret:
+        required: true
+      pg_user:
+        required: true
+      pg_password:
+        required: true
+      pg_host:
+        required: true
+      pg_port:
+        required: true
+      pg_database:
+        required: true
+      kube_config:
+        required: true
+
+env:
+  PLATFORM:    ${{ inputs.platform }}
+  ENVIRONMENT: ${{ inputs.environment }}
+  VERSION:     ${{ inputs.version }}
+
+  ACR_NAME:         ${{ secrets.acr_name }}
+  ACR_WRITE_ID:     ${{ secrets.acr_write_id }}
+  ACR_WRITE_SECRET: ${{ secrets.acr_write_secret }}
+
+  PG_USER:     ${{ secrets.pg_user }}
+  PG_PASSWORD: ${{ secrets.pg_password }}
+  PG_HOST:     ${{ secrets.pg_host }}
+  PG_PORT:     ${{ secrets.pg_port }}
+  PG_DATABASE: ${{ secrets.pg_database }}
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Prepare Kubernetes context
+        uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.kube_config }}
+
+      - name: Deploy application to cluster
+        run: |
+          helm upgrade --install \
+            --set acr.name=${ACR_NAME} \
+            --set namespace=env-${ENVIRONMENT,,} \
+            --set host=${ENVIRONMENT,,}.${PLATFORM,,}.mtapsmartcity.com \
+            --set gateway=keycloak-gateway-${ENVIRONMENT,,} \
+            --set app.version=${VERSION} \
+            ${GITHUB_REPOSITORY##*/}-${ENVIRONMENT,,} ./helm
