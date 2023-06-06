@@ -1,5 +1,10 @@
 on:
   workflow_call:
+    secrets:
+      gitlabToken:
+        required: true
+      mtapToken:
+        required: true
 
 jobs:
   image-build-and-scan:
@@ -12,6 +17,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           tags: app:${{ github.sha }}
+          secrets: |
+            gitlab_token=${{ secrets.gitlabToken }}
+            mtap_token=${{ secrets.mtapToken }}
 
       - name: Scan image
         uses: aquasecurity/trivy-action@master

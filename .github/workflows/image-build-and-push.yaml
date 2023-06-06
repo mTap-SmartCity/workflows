@@ -15,6 +15,10 @@ on:
         required: true
       registryPassword:
         required: true
+      gitlabToken:
+        required: true
+      mtapToken:
+        required: true
 
 jobs:
   image-build-and-push:
@@ -34,3 +38,6 @@ jobs:
         with:
           push: true
           tags: ${{ inputs.registryName }}/${{ inputs.applicationName }}:${{ inputs.applicationVersion }}
+          secrets: |
+            gitlab_token=${{ secrets.gitlabToken }}
+            mtap_token=${{ secrets.mtapToken }}
