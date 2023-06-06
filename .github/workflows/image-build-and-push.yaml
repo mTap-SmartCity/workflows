@@ -23,6 +23,12 @@ on:
 jobs:
   image-build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
     outputs:
       docker-image: ${{ steps.build.outputs.docker-image }}
     steps:
@@ -42,7 +48,7 @@ jobs:
       - name: Build image
         uses: docker/build-push-action@v4
         with:
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.platform }}
           push: true
           tags: ${{ inputs.registryName }}/${{ inputs.applicationName }}:${{ inputs.applicationVersion }}
           secrets: |
