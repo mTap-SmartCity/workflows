@@ -1,0 +1,31 @@
+on:
+  workflow_call:
+
+jobs:
+  image-build-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v4
+        with:
+          tags: app:${{ github.sha }}
+
+      - name: Scan image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: app:${{ github.sha }}
+          format: table
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+
+      - name: Quality gate
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: app:${{ github.sha }}
+          format: table
+          exit-code: 1
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'

@@ -1,0 +1,52 @@
+on:
+  workflow_call:
+    inputs:
+      registryName:
+        required: true
+        type: string
+      applicationName:
+        required: true
+        type: string
+      applicationVersion:
+        required: true
+        type: string
+    secrets:
+      registryUsername:
+        required: true
+      registryPassword:
+        required: true
+      cosignPrivateKey:
+        required: true
+
+jobs:
+  image-sign:
+    runs-on: ubuntu-latest
+    outputs:
+      docker-image: ${{ steps.build.outputs.docker-image }}
+    steps:
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@main
+        with:
+          cosign-release: 'v2.0.1'
+
+      - name: Write signing key to disk
+        env:
+          KEY: ${{ secrets.cosignPrivateKey }}
+        run: echo "$KEY" > cosign.key
+
+      - name: Login to ${{ inputs.registryName }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ inputs.registryName }}
+          username: ${{ secrets.registryUsername }}
+          password: ${{ secrets.registryPassword }}
+
+      - name: Sign the published Docker image
+        env:
+          COSIGN_PASSWORD: ""
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          cosign sign \
+            --tlog-upload=false \
+            --key cosign.key \
+            ${{ inputs.registryName }}/${{ inputs.applicationName }}:${{ inputs.applicationVersion }}
