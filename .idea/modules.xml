@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/workflows.iml" filepath="$PROJECT_DIR$/.idea/workflows.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/mtap-workflows.iml" filepath="$PROJECT_DIR$/.idea/mtap-workflows.iml" />
     </modules>
   </component>
 </project>

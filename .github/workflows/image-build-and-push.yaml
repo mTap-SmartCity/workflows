@@ -42,7 +42,7 @@ jobs:
       - name: Build image
         uses: docker/build-push-action@v4
         with:
-          platforms: linux/amd64,inux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ inputs.registryName }}/${{ inputs.applicationName }}:${{ inputs.applicationVersion }}
           secrets: |
